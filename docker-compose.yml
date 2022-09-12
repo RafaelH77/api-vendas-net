@@ -1,0 +1,97 @@
+version: '3.4'
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+      # Expose 15672 for the management console, localhost:15672, guest/guest
+      # Expose 5672 for the qmpq port
+      
+      # https://stackoverflow.com/questions/30747469/how-to-add-initial-users-when-starting-a-rabbitmq-docker-container
+    hostname: rabbitmq_localdev
+    
+  futuradb:
+    image: postgres
+    container_name: futuradb
+    restart: always
+    command:
+      - "postgres"
+      - "-c"
+      - "max_prepared_transactions=64"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin       
+    ports:
+      - "5432:5432"   
+    volumes:            
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql         
+    networks:
+      - postgres-network  
+
+  pgadmin:    
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "futuraadmin@futurasistemas.com.br"
+      PGADMIN_DEFAULT_PASSWORD: "futura1313"
+    ports:
+      - "16543:80"
+    volumes:
+      - pgadmin_data:/root/.pgadmin
+    networks:
+      - postgres-network    
+    depends_on:
+      - futuradb         
+      
+  elasticsearch: 
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+    ports:
+      - 9200:9200 
+    volumes:
+      - elasticsearch-data:/var/lib/elasticsearch/data
+    environment:
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    networks:
+      - elastic
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:8.3.3
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_URL=http://localhost:9200
+    networks:
+      - elastic      
+
+  redis:
+    container_name: redis
+    image: redis:7.0.4-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/var/lib/redis/data
+    networks:
+      - redis
+      
+networks:
+  elastic:
+    driver: bridge
+  redis:
+    driver: bridge
+  postgres-network:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+  redis-data:
+  pgadmin_data:
+      
