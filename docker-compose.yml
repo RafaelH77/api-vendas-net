@@ -14,17 +14,17 @@ services:
       # https://stackoverflow.com/questions/30747469/how-to-add-initial-users-when-starting-a-rabbitmq-docker-container
     hostname: rabbitmq_localdev
     
-  futuradb:
+  db:
     image: postgres
-    container_name: futuradb
+    container_name: db
     restart: always
     command:
       - "postgres"
       - "-c"
       - "max_prepared_transactions=64"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin       
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"   
     volumes:            
@@ -35,8 +35,8 @@ services:
   pgadmin:    
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: "futuraadmin@futurasistemas.com.br"
-      PGADMIN_DEFAULT_PASSWORD: "futura1313"
+      PGADMIN_DEFAULT_EMAIL: ${PGSQL_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGSQL_DEFAULT_PASSWORD}
     ports:
       - "16543:80"
     volumes:
@@ -44,7 +44,7 @@ services:
     networks:
       - postgres-network    
     depends_on:
-      - futuradb         
+      - db         
       
   elasticsearch: 
     container_name: elasticsearch
