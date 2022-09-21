@@ -34,6 +34,7 @@ public static class DependencyInjectionAPI
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ISellerService, SellerService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IMessageService, MessageService>();
 
         services.AddScoped<IAuthenticate, AuthenticateService>();
 
